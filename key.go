@@ -1,22 +1,32 @@
 /*
 Package key contains a single Key interface. The key package was
 created to prevent cicular dependencies between "github.com/lleo/go-hamt" and
-either "github.com/lleo/go-hamt/hamt32" or "github.com/lleo/go-hamt/hamt64".
+either "github.com/lleo/go-hamt/hamt32", "github.com/lleo/go-hamt/hamt64",
+"github.com/lleo/go-hamt-functional/hamt32", or
+"github.com/lleo/go-hamt-functional/hamt64"
 
-Additionally, the github.com/lleo/go-hamt/key provides a Base structure.
+Additionally, the "github.com/lleo/go-hamt-key" provides a Base structure.
 The Base structure if added to a derivative key type will provide the
-Hash30() and Hash60() methods. Base needs to be populated by the derivative
-key constructor calling the Initialize([]byte) method.
+k.Hash30() and k.Hash60() methods. Base needs to be populated by the derivative
+key constructor calling the k.Initialize([]byte) method.
 
-Any key created using the Key interface must be read only after construction.
+Any key created using the Key interface must be read-only after construction.
 
 The Hash30() returns a special type HashVal30. Which really just an alias for
-uint32, but it provides methods for viewing the 30 bit hash30 value. For
-instance the Index() method will pull out the 5bit values for each depth of
-the Hamt datastructure that is really the index into a table. Also, there
-are methods to produce string representations of the underlying uint32.
+uint32 that stores a 30 bit hash value, but it provides methods for viewing the
+30 bit hash30 value. For instance the hv.Index() method will pull out the 5 bit
+integer values, as a uint, for each depth of the Hamt datastructure that is
+really the index into a table. Also, there are methods to produce string
+representations of the underlying 30 bit hash value.
 
-The key package is ALSO used by the functional HAMT variation in
+The Hash60() returns a special type HashVal60. Which really just an alias for
+uint64 that stores a 60 bit hash value, but it provides methods for viewing the
+60 bit hash60 value. For instance the hv.Index() method will pull out the 5 bit
+integer values, as a uint, for each depth of the Hamt datastructure that is
+really the index into a table. Also, there are methods to produce string
+representations of the underlying 60 bit hash value.
+
+The key package is also used by the functional HAMT variation in
 "github.com/lleo/go-hamt-functional".
 */
 package key
