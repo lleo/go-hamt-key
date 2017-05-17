@@ -47,28 +47,25 @@ func (hashPath HashVal30) BuildHashPath(idx, depth uint) HashVal30 {
 	return hp | HashVal30(idx<<(depth*BitsPerLevel30))
 }
 
-// HashPathString() returns a string representation of the index path of
-// a HashVal30 30 bit value; that is depth number of zero padded numbers between
-// "00" and "63" separated by '/' characters and a leading '/'. If the depth
+// HashPathString() returns a string representation of the index path of a
+// HashVal30 30 bit value; that is depth number of zero padded numbers between
+// "00" and "31" separated by '/' characters and a leading '/'. If the limit
 // parameter is 0 then the method will simply return a solitary "/".
-// Warning: It will panic() if depth > MaxDepth30.
-// Example: "/00/24/46/17" for depth=4 of a hash30 value represented
+// Warning: It will panic() if limit > MaxDepth30+1.
+// Example: "/00/24/46/17" for limit=4 of a hash30 value represented
 //       by "/00/24/46/17/34/08".
-func (h30 HashVal30) HashPathString(depth uint) string {
-	if depth > MaxDepth30 {
-		panic(fmt.Sprintf("HashPathString: depth,%d > MaxDepth30,%d\n", depth, MaxDepth30))
+func (h30 HashVal30) HashPathString(limit uint) string {
+	if limit > MaxDepth30+1 {
+		panic(fmt.Sprintf("HashPathString: limit,%d > MaxDepth30+1,%d\n", limit, MaxDepth30+1))
 	}
 
-	if depth == 0 {
+	if limit == 0 {
 		return "/"
 	}
 
-	// Remember we want to include the indexes from [0, depth] (hence including depth)
-	// So strs has to be depth+1 in size, and the for loop has to include i=depth.
+	var strs = make([]string, limit)
 
-	var strs = make([]string, depth+1)
-
-	for d := uint(0); d <= depth; d++ {
+	for d := uint(0); d < limit; d++ {
 		var idx = h30.Index(d)
 		strs[d] = fmt.Sprintf("%02d", idx)
 	}
@@ -91,13 +88,13 @@ func (h30 HashVal30) BitString() string {
 // seperated by '/' characters and given a leading '/'.
 // Example: "/08/14/28/20/00/31"
 func (h30 HashVal30) String() string {
-	return h30.HashPathString(MaxDepth30)
+	return h30.HashPathString(MaxDepth30 + 1)
 }
 
-// ParseHashVal30() parses a string with a leading '/' and MaxDepth30+1 number
+// ParseHashPath30() parses a string with a leading '/' and MaxDepth30+1 number
 // of two digit numbers zero padded between "00" and "31" joined by '/' characters.
 // Example: var h30 key.HashVal30 = key.ParseHashVal30("/00/01/02/03/04/05")
-func ParseHashVal30(s string) HashVal30 {
+func ParseHashPath30(s string) HashVal30 {
 	if !strings.HasPrefix(s, "/") {
 		panic(errors.New("does not start with '/'"))
 	}

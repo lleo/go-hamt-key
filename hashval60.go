@@ -21,8 +21,8 @@ func indexMask60(depth uint) HashVal60 {
 	return HashVal60((1<<BitsPerLevel60)-1) << (depth * BitsPerLevel60)
 }
 
-// Index() will return a 6 bit (aka BitsPerLevel60) value 'depth' number
-// of 6 bits from the beginning of the HashVal60 (aka uint32) h60 value.
+// Index() will return a 6bit (aka BitsPerLevel60) value 'depth' number
+// of 6bits from the beginning of the HashVal60 (aka uint64) h60 value.
 func (h60 HashVal60) Index(depth uint) uint {
 	var idxMask = indexMask60(depth)
 	var idx = uint((h60 & idxMask) >> (depth * BitsPerLevel60))
@@ -38,7 +38,7 @@ func HashPathMask60(depth uint) HashVal60 {
 // BuildHashPath() method adds a idx at depth level of the hashPath.
 // Given a hashPath = "/11/22/33" and you call hashPath.BuildHashPath(44, 3)
 // the method will return hashPath "/11/22/33/44". hashPath is shown here
-// in the string representation, but the real value is HashVal60 (aka uint32).
+// in the string representation, but the real value is HashVal60 (aka uint64).
 func (hashPath HashVal60) BuildHashPath(idx, depth uint) HashVal60 {
 	//var mask = HashPathMask60(depth-1)
 	var mask HashVal60 = (1 << (depth * BitsPerLevel60)) - 1
@@ -47,28 +47,25 @@ func (hashPath HashVal60) BuildHashPath(idx, depth uint) HashVal60 {
 	return hp | HashVal60(idx<<(depth*BitsPerLevel60))
 }
 
-// HashPathString() returns a string representation of the index path of
-// a HashVal60 60 bit value; that is depth number of zero padded numbers between
-// "00" and "63" separated by "/" characters and a leading '/'. If the depth
+// HashPathString() returns a string representation of the index path of a
+// HashVal60 60 bit value; that is depth number of zero padded numbers between
+// "00" and "63" separated by '/' characters and a leading '/'. If the limit
 // parameter is 0 then the method will simply return a solitary "/".
-// Warning: It will panic() if depth > MaxDepth60.
-// Example: "/00/24/46/17/34/08/54" for depth=7 of a hash60 value represented
-//       by "/00/24/46/17/34/08/54/28/59/51".
-func (h60 HashVal60) HashPathString(depth uint) string {
-	if depth > MaxDepth60 {
-		panic(fmt.Sprintf("HashPathString: depth,%d > MaxDepth60,%d\n", depth, MaxDepth60))
+// Warning: It will panic() if limit > MaxDepth60+1.
+// Example: "/00/24/46/17" for limit=4 of a hash60 value represented
+//       by "/00/24/46/17/34/08".
+func (h60 HashVal60) HashPathString(limit uint) string {
+	if limit > MaxDepth60+1 {
+		panic(fmt.Sprintf("HashPathString: limit,%d > MaxDepth60+1,%d\n", limit, MaxDepth60+1))
 	}
 
-	if depth == 0 {
+	if limit == 0 {
 		return "/"
 	}
 
-	// Remember we want to include the indexes from [0, depth] (hence including depth)
-	// So strs has to be depth+1 in size, and the for loop has to include i=depth.
+	var strs = make([]string, limit)
 
-	var strs = make([]string, depth)
-
-	for d := uint(0); d < depth; d++ {
+	for d := uint(0); d < limit; d++ {
 		var idx = h60.Index(d)
 		strs[d] = fmt.Sprintf("%02d", idx)
 	}
@@ -81,7 +78,7 @@ func (h60 HashVal60) HashPathString(depth uint) string {
 func (h60 HashVal60) BitString() string {
 	var s = make([]string, MaxDepth60+1)
 	for i := uint(0); i <= MaxDepth60; i++ {
-		s[MaxDepth60-i] += fmt.Sprintf("%06b", h60.Index(i))
+		s[MaxDepth60-i] += fmt.Sprintf("%05b", h60.Index(i))
 	}
 	return "00 " + strings.Join(s, " ")
 }
@@ -89,15 +86,15 @@ func (h60 HashVal60) BitString() string {
 // String() returns a string representation of the h60 HashVal60 value. This
 // is MaxDepth60+1(10) two digit numbers (zero padded) between "00" and "63"
 // seperated by '/' characters and given a leading '/'.
-// Example: "/08/14/28/20/00/31/56/01/24/63"
+// Example: "/08/14/28/20/00/63"
 func (h60 HashVal60) String() string {
-	return h60.HashPathString(MaxDepth60)
+	return h60.HashPathString(MaxDepth60 + 1)
 }
 
-// ParseHashVal60() parses a string with a leading '/' and MaxDepth60+1 number
+// ParseHashPath60() parses a string with a leading '/' and MaxDepth60+1 number
 // of two digit numbers zero padded between "00" and "63" joined by '/' characters.
-// Example: var h60 key.HashVal60 = key.ParseHashVal60("/00/01/02/0\/03/04/05/06/07/08/09")
-func ParseHashVal60(s string) HashVal60 {
+// Example: var h60 key.HashVal60 = key.ParseHashVal60("/00/01/02/03/04/05")
+func ParseHashPath60(s string) HashVal60 {
 	if !strings.HasPrefix(s, "/") {
 		panic(errors.New("does not start with '/'"))
 	}
