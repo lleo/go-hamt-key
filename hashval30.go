@@ -2,6 +2,7 @@ package key
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -35,9 +36,23 @@ func HashPathMask30(depth uint) HashVal30 {
 	return HashVal30(1<<((depth+1)*BitsPerLevel30)) - 1
 }
 
+// HashPath() calculates the path required to read the given depth. In other
+// words it returns a uint32 that preserves the first depth-1 5bit index values.
+// For depth=0 it always returns no path (aka a 0 value).
+// For depth=MaxDepth60 it returns all but the last set of 5bit index values.
+func (h30 HashVal30) HashPath(depth uint) HashVal30 {
+	if depth == 0 {
+		return 0
+	}
+	if depth > MaxDepth30 {
+		log.Panicf("HashPath(): depth,%d > MaxDepth30,%d", depth, MaxDepth30)
+	}
+	return h30 & HashPathMask30(depth-1)
+}
+
 // BuildHashPath() method adds a idx at depth level of the hashPath.
-// Given a hashPath = "/11/22/33" and you call hashPath.BuildHashPath(44, 3)
-// the method will return hashPath "/11/22/33/44". hashPath is shown here
+// Given a hashPath = "/11/07/13" and you call hashPath.BuildHashPath(23, 3)
+// the method will return hashPath "/11/07/13/23". hashPath is shown here
 // in the string representation, but the real value is HashVal30 (aka uint32).
 func (hashPath HashVal30) BuildHashPath(idx, depth uint) HashVal30 {
 	//var mask = HashPathMask30(depth-1)
